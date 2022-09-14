@@ -45,6 +45,7 @@ def load_blender_data(basedir, half_res=False, testskip=1):
     all_poses = []
     counts = [0]
     for s in splits:
+        print(s)
         meta = metas[s]
         imgs = []
         poses = []
@@ -56,6 +57,8 @@ def load_blender_data(basedir, half_res=False, testskip=1):
         for frame in meta['frames'][::skip]:
             fname = os.path.join(basedir, frame['file_path'] + '.png')
             imgs.append(imageio.imread(fname))
+            if s == "test":
+                print(fname)
             poses.append(np.array(frame['transform_matrix']))
         imgs = (np.array(imgs) / 255.).astype(np.float32) # keep all 4 channels (RGBA)
         poses = np.array(poses).astype(np.float32)
@@ -84,8 +87,9 @@ def load_blender_data(basedir, half_res=False, testskip=1):
             imgs_half_res[i] = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
         imgs = imgs_half_res
         # imgs = tf.image.resize_area(imgs, [400, 400]).numpy()
-
         
     return imgs, poses, render_poses, [H, W, focal], i_split
 
 
+if __name__ == '__main__':
+    load_blender_data(basedir='./data/nerf_synthetic/lego', half_res=True, testskip=8)

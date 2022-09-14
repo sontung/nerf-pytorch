@@ -152,6 +152,17 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         print(i, time.time() - t)
         t = time.time()
         rgb, disp, acc, _ = render(H, W, K, chunk=chunk, c2w=c2w[:3,:4], **render_kwargs)
+
+        import cv2
+        rgb = rgb.cpu().numpy()
+        rgb = to8b(rgb)
+        rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
+        cv2.imshow("", rgb)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        print()
+
         rgbs.append(rgb.cpu().numpy())
         disps.append(disp.cpu().numpy())
         if i==0:
@@ -167,7 +178,6 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             rgb8 = to8b(rgbs[-1])
             filename = os.path.join(savedir, '{:03d}.png'.format(i))
             imageio.imwrite(filename, rgb8)
-
 
     rgbs = np.stack(rgbs, 0)
     disps = np.stack(disps, 0)
@@ -556,6 +566,20 @@ def train():
         i_train = np.array([i for i in np.arange(int(images.shape[0])) if
                         (i not in i_test and i not in i_val)])
 
+        # import cv2
+        #
+        # for i in i_train:
+        #     img = images[i] * 255
+        #     img = img.astype(np.uint8)
+        #     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #     cv2.imwrite(f"/home/n11373598/work/nerf-vloc/data/horn/images/db_images/train_img{i}.png", img)
+        #
+        # for i in i_test:
+        #     img = images[i] * 255
+        #     img = img.astype(np.uint8)
+        #     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #     cv2.imwrite(f"/home/n11373598/work/nerf-vloc/data/horn/images/query_images/test_img{i}.png", img)
+
         print('DEFINING BOUNDS')
         if args.no_ndc:
             near = np.ndarray.min(bds) * .9
@@ -696,7 +720,6 @@ def train():
     poses = torch.Tensor(poses).to(device)
     if use_batching:
         rays_rgb = torch.Tensor(rays_rgb).to(device)
-
 
     N_iters = 200000 + 1
     print('Begin')
